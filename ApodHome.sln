@@ -1,0 +1,42 @@
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.31903.59
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ApodHome.Core", "src\ApodHome.Core\ApodHome.Core.csproj", "{0AA67D1D-ECF4-4DB5-9EBB-1D41CE04FBE3}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ApodHome.Updater", "src\ApodHome.Updater\ApodHome.Updater.csproj", "{A774B622-3BA2-47C8-9CF8-55F19A509A2D}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ApodHome.Admin", "src\ApodHome.Admin\ApodHome.Admin.csproj", "{C379BE9F-498C-4E2D-8C84-B2F8B984CDEB}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ApodHome.Settings", "src\ApodHome.Settings\ApodHome.Settings.csproj", "{4C5FE3AA-94A5-49E8-850B-65D105AAB419}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ApodHome.Core.Tests", "tests\ApodHome.Core.Tests\ApodHome.Core.Tests.csproj", "{956E1F6A-C2BF-418A-9619-81D61DD60D03}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{0AA67D1D-ECF4-4DB5-9EBB-1D41CE04FBE3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0AA67D1D-ECF4-4DB5-9EBB-1D41CE04FBE3}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0AA67D1D-ECF4-4DB5-9EBB-1D41CE04FBE3}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0AA67D1D-ECF4-4DB5-9EBB-1D41CE04FBE3}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A774B622-3BA2-47C8-9CF8-55F19A509A2D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A774B622-3BA2-47C8-9CF8-55F19A509A2D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A774B622-3BA2-47C8-9CF8-55F19A509A2D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A774B622-3BA2-47C8-9CF8-55F19A509A2D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C379BE9F-498C-4E2D-8C84-B2F8B984CDEB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C379BE9F-498C-4E2D-8C84-B2F8B984CDEB}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C379BE9F-498C-4E2D-8C84-B2F8B984CDEB}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C379BE9F-498C-4E2D-8C84-B2F8B984CDEB}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4C5FE3AA-94A5-49E8-850B-65D105AAB419}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4C5FE3AA-94A5-49E8-850B-65D105AAB419}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4C5FE3AA-94A5-49E8-850B-65D105AAB419}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4C5FE3AA-94A5-49E8-850B-65D105AAB419}.Release|Any CPU.Build.0 = Release|Any CPU
+		{956E1F6A-C2BF-418A-9619-81D61DD60D03}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{956E1F6A-C2BF-418A-9619-81D61DD60D03}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{956E1F6A-C2BF-418A-9619-81D61DD60D03}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{956E1F6A-C2BF-418A-9619-81D61DD60D03}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal
