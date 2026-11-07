@@ -20,7 +20,7 @@ public sealed class ImageNormalizer
             if (decoder.Frames.Count == 0 || decoder.Frames[0].PixelWidth < 32 || decoder.Frames[0].PixelHeight < 32 ||
                 (long)decoder.Frames[0].PixelWidth * decoder.Frames[0].PixelHeight > SafeHttp.MaxPixels)
                 throw new InvalidDataException("Downloaded APOD image is too small or unreadable.");
-            var encoder = new JpegBitmapEncoder { QualityLevel = 94 };
+            var encoder = new JpegBitmapEncoder { QualityLevel = 98 };
             encoder.Frames.Add(BitmapFrame.Create(decoder.Frames[0]));
             await using (var output = File.Create(temporary))
                 encoder.Save(output);

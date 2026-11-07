@@ -1,5 +1,5 @@
 #define MyAppName "APOD Home"
-#define MyAppVersion "1.0.0"
+#define MyAppVersion "1.0.2"
 #define MyAppPublisher "APOD Home"
 #define PublishDir "..\publish\win-x64"
 

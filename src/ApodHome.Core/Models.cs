@@ -16,7 +16,8 @@ public sealed record CachedApod(
     string Title,
     string PageUrl,
     string ImagePath,
-    DateTimeOffset UpdatedAtUtc);
+    DateTimeOffset UpdatedAtUtc,
+    int ImageQualityRevision = 0);
 
 public sealed record UpdateResult(bool Updated, CachedApod? Item, string? Message = null);
 
@@ -28,4 +29,9 @@ public interface IApodProvider
 public interface IWallpaperService
 {
     void SetFillWallpaper(string imagePath);
+}
+
+public interface ILockScreenService
+{
+    Task<bool> TrySetAsync(string imagePath, CancellationToken cancellationToken = default);
 }

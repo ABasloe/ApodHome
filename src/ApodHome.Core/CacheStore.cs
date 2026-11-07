@@ -35,9 +35,36 @@ public sealed class CacheStore
         File.Copy(CurrentImagePath, archive, true);
     }
 
+    // Windows requires a different filename when a lock-screen image changes.
+    // Retaining a dated, immutable copy also ensures the shell never reads a file
+    // while the desktop updater is replacing it.
+    public string GetOrCreateLockScreenImage(DateOnly date)
+    {
+        if (!File.Exists(CurrentImagePath)) throw new FileNotFoundException("Current APOD image was not found.", CurrentImagePath);
+        var lockImage = Path.Combine(_root, $"lock-{date:yyyyMMdd}.jpg");
+        if (!File.Exists(lockImage))
+        {
+            File.Copy(CurrentImagePath, lockImage);
+        }
+        else if (!File.ReadAllBytes(CurrentImagePath).AsSpan().SequenceEqual(File.ReadAllBytes(lockImage)))
+        {
+            // Windows can retain an open handle to a lock-screen image. Keep
+            // both files immutable and switch to a fresh filename instead of
+            // overwriting the file Windows may still be displaying.
+            lockImage = Path.Combine(_root, $"lock-{date:yyyyMMdd}-{DateTime.UtcNow:HHmmssfff}.jpg");
+            File.Copy(CurrentImagePath, lockImage);
+        }
+        PruneHistory();
+        return lockImage;
+    }
+
     private void PruneHistory()
     {
-        foreach (var file in new DirectoryInfo(_root).GetFiles("*.jpg").Where(x => x.Name != "current.jpg").OrderByDescending(x => x.LastWriteTimeUtc).Skip(7))
+        var images = new DirectoryInfo(_root).GetFiles("*.jpg");
+        foreach (var file in images.Where(x => x.Name != "current.jpg" && !x.Name.StartsWith("lock-", StringComparison.OrdinalIgnoreCase)).OrderByDescending(x => x.LastWriteTimeUtc).Skip(7))
+            file.Delete();
+        // Keep the active lock-screen source but do not accumulate duplicate copies.
+        foreach (var file in images.Where(x => x.Name.StartsWith("lock-", StringComparison.OrdinalIgnoreCase)).OrderByDescending(x => x.LastWriteTimeUtc).Skip(1))
             file.Delete();
     }
 }

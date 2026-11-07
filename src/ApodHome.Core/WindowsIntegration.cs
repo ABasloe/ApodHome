@@ -28,29 +28,34 @@ public sealed class WindowsWallpaperService : IWallpaperService
     private static extern bool SystemParametersInfo(uint action, uint param, string value, uint flags);
 }
 
+/// <summary>
+/// Uses the supported per-user Windows API. This intentionally does not use a
+/// machine-wide policy: that policy is ignored by consumer Windows Pro editions.
+/// </summary>
+public sealed class WindowsLockScreenService : ILockScreenService
+{
+    public async Task<bool> TrySetAsync(string imagePath, CancellationToken cancellationToken = default)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        if (!File.Exists(imagePath) || !Windows.System.UserProfile.UserProfilePersonalizationSettings.IsSupported())
+            return false;
+
+        var image = await Windows.Storage.StorageFile.GetFileFromPathAsync(imagePath);
+        cancellationToken.ThrowIfCancellationRequested();
+        // The profile convenience API can return success for unpackaged desktop
+        // apps without changing the visible lock screen. Use the dedicated
+        // lock-screen API that Windows documents for setting this surface.
+        await Windows.System.UserProfile.LockScreen.SetImageFileAsync(image);
+        var applied = Windows.System.UserProfile.LockScreen.OriginalImageFile;
+        return applied is not null && string.Equals(applied.LocalPath, imagePath, StringComparison.OrdinalIgnoreCase);
+    }
+}
+
+// Retained only to remove policy values written by version 1.0.0 during an upgrade.
 public sealed class LockScreenPolicyManager
 {
     private const string PolicyPath = @"SOFTWARE\Policies\Microsoft\Windows\Personalization";
     private const string AppPath = @"SOFTWARE\ApodHome";
-
-    public void Configure(string imagePath)
-    {
-        var expectedPath = Path.GetFullPath(CacheStore.ForDesktop().CurrentImagePath);
-        if (!string.Equals(Path.GetFullPath(imagePath), expectedPath, StringComparison.OrdinalIgnoreCase))
-            throw new InvalidOperationException("APOD Home will only configure its fixed per-user image path.");
-        using var app = Registry.LocalMachine.CreateSubKey(AppPath, writable: true)!;
-        using var policy = Registry.LocalMachine.CreateSubKey(PolicyPath, writable: true)!;
-        var owned = IsOne(app.GetValue("OwnsLockScreenPolicy"));
-        var existingValue = policy.GetValue("LockScreenImage", null, RegistryValueOptions.DoNotExpandEnvironmentNames);
-        var existing = existingValue as string;
-        if (!owned && existingValue is not null)
-            throw new InvalidOperationException("The lock/sign-in image is already managed by another Windows policy. APOD Home will not override it.");
-        if (owned && !string.Equals(existing, expectedPath, StringComparison.OrdinalIgnoreCase))
-            throw new InvalidOperationException("The lock/sign-in policy changed after APOD Home was installed. Reinstall it only after reviewing the change.");
-        if (!owned) policy.SetValue("LockScreenImage", expectedPath, RegistryValueKind.String);
-        app.SetValue("OwnsLockScreenPolicy", 1, RegistryValueKind.DWord);
-        app.SetValue("ManagedLockScreenPath", expectedPath, RegistryValueKind.String);
-    }
 
     public void Remove()
     {

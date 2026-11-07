@@ -7,12 +7,13 @@ retiring legacy APOD API.
 
 ## Security model
 
-The installer uses elevation only to configure the fixed Windows lock/sign-in
-policy and its user-level scheduled tasks. APOD media is always downloaded and
-decoded by the signed-in user, never by SYSTEM or an elevated process. The
-application accepts HTTPS URLs only, validates every redirect, limits image
-downloads to 30 MB and 100 million pixels, and uses the same fixed per-user
-cache image for desktop and lock/sign-in display.
+The installer uses elevation only to set up user-level scheduled tasks and to
+remove a legacy policy left by version 1.0.0. APOD media is always downloaded,
+decoded, and applied by the signed-in user, never by SYSTEM or an elevated
+process. The application uses Windows' per-user lock-screen API instead of a
+machine policy, because that policy is unsupported on Windows Pro. It accepts
+HTTPS URLs only, validates every redirect, and limits image downloads to 30 MB
+and 100 million pixels.
 
 Release builds must be code-signed before distribution. The repository does
 not contain a signing certificate or private key; do not install binaries from
@@ -31,12 +32,13 @@ dotnet publish .\src\ApodHome.Settings\ApodHome.Settings.csproj -c Release -r wi
 ```
 
 Compile `installer/ApodHome.iss` with Inno Setup after publishing. The
-installer needs administrator approval once to create the lock/sign-in policy
-and scheduled tasks. Use the Start-menu **APOD Home** shortcut for status or a
-manual refresh.
+installer needs administrator approval once to create scheduled tasks. Use the
+Start-menu **APOD Home** shortcut for status or a manual refresh. In Windows
+Settings > Personalization > Lock screen, turn on **Show the lock screen
+background picture on the sign-in screen** once if you also want the picture
+behind the password/PIN prompt.
 
-Per-user tasks update the image at sign-in and hourly while you are signed in.
-Windows then uses the fixed cached image on the lock/sign-in screen. Every
-successful image is retained briefly, so an unavailable network or APOD never
-replaces a working background.
+Per-user tasks update the desktop and lock screen at sign-in and hourly while
+you are signed in. Every successful image is retained briefly, so an
+unavailable network or APOD never replaces a working background.
 

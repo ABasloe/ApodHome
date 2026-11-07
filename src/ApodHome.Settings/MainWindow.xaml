@@ -21,7 +21,7 @@
       <TextBlock x:Name="UpdatedText" Margin="0,4,0,12" Foreground="DimGray" />
       <WrapPanel>
         <Button x:Name="RefreshDesktopButton" Click="RefreshDesktop_Click" Padding="14,7" Margin="0,0,8,0">Refresh desktop</Button>
-        <Button x:Name="RefreshAllButton" Click="RefreshAll_Click" Padding="14,7" Margin="0,0,8,0">Refresh all screens</Button>
+        <Button x:Name="RefreshAllButton" Click="RefreshAll_Click" Padding="14,7" Margin="0,0,8,0">Refresh desktop and lock screen</Button>
         <Button x:Name="OpenSourceButton" Click="OpenSource_Click" Padding="14,7">Open APOD</Button>
       </WrapPanel>
     </StackPanel>

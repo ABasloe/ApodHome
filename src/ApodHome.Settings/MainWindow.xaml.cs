@@ -35,25 +35,13 @@ public partial class MainWindow : Window
 
     private async void RefreshDesktop_Click(object sender, RoutedEventArgs e)
     {
-        await RunBusyAsync(async () => await ApodHomeFactory.CreateUpdater().UpdateAsync(UpdateTarget.Desktop));
+        await RunBusyAsync(() => ApodHomeFactory.CreateUpdater().UpdateAsync(UpdateTarget.Desktop));
         await RefreshStatusAsync();
     }
 
     private async void RefreshAll_Click(object sender, RoutedEventArgs e)
     {
-        await RunBusyAsync(async () =>
-        {
-            await ApodHomeFactory.CreateUpdater().UpdateAsync(UpdateTarget.Desktop);
-            using var process = Process.Start(new ProcessStartInfo
-            {
-                FileName = Path.Combine(AppContext.BaseDirectory, "ApodHome.Admin.exe"),
-                Arguments = "refresh-lock",
-                Verb = "runas",
-                UseShellExecute = true
-            });
-            process?.WaitForExit();
-            if (process?.ExitCode != 0) throw new InvalidOperationException("The administrator refresh did not finish successfully.");
-        });
+        await RunBusyAsync(() => ApodHomeFactory.CreateUpdater().UpdateAsync(UpdateTarget.Desktop));
         await RefreshStatusAsync();
     }
 
@@ -67,10 +55,14 @@ public partial class MainWindow : Window
         Process.Start(new ProcessStartInfo(page.AbsoluteUri) { UseShellExecute = true });
     }
 
-    private async Task RunBusyAsync(Func<Task> action)
+    private async Task RunBusyAsync(Func<Task<UpdateResult>> action)
     {
         RefreshDesktopButton.IsEnabled = RefreshAllButton.IsEnabled = false;
-        try { await action(); StatusText.Text = "Updated successfully."; }
+        try
+        {
+            var result = await action();
+            StatusText.Text = result.Message ?? "Updated successfully.";
+        }
         catch (Exception exception) { MessageBox.Show(this, exception.Message, "APOD Home", MessageBoxButton.OK, MessageBoxImage.Error); }
         finally { RefreshDesktopButton.IsEnabled = RefreshAllButton.IsEnabled = true; }
     }

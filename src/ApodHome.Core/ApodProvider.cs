@@ -25,22 +25,37 @@ public sealed class NasaApodProvider(HttpClient httpClient) : IApodProvider
         if (post.ValueKind is JsonValueKind.Undefined or JsonValueKind.Null)
             throw new InvalidDataException("NASA returned no APOD entry for this date.");
 
+        var returnedDate = ReadText(post, "date");
+        if (!DateOnly.TryParse(returnedDate, out var apodDate) || apodDate != date)
+            throw new InvalidDataException("NASA returned an APOD for a different date.");
+
         var title = HtmlDecode(ReadText(post, "title") ?? "Astronomy Picture of the Day");
-        var page = ReadText(post, "link") ?? "https://science.nasa.gov/apod/";
-        var content = ReadText(post, "content") ?? string.Empty;
-        var mediaType = content.Contains("youtube", StringComparison.OrdinalIgnoreCase) ||
+        // The current NASA endpoint uses `url`/`permalink`; `link` was used by
+        // an older WordPress response. Falling back to the APOD landing page
+        // causes its preview image to be used instead of the requested APOD.
+        var page = ReadText(post, "url") ?? ReadText(post, "permalink") ?? ReadText(post, "link");
+        if (page is null) throw new InvalidDataException("NASA returned no APOD page URL.");
+        var content = ReadText(post, "explanation") ?? ReadText(post, "content") ?? string.Empty;
+        var declaredMediaType = ReadText(post, "media_type");
+        var mediaType = declaredMediaType?.Equals("video", StringComparison.OrdinalIgnoreCase) == true ||
+                        content.Contains("youtube", StringComparison.OrdinalIgnoreCase) ||
                         content.Contains("vimeo", StringComparison.OrdinalIgnoreCase) ||
                         content.Contains("<iframe", StringComparison.OrdinalIgnoreCase)
             ? ApodMediaType.Video : ApodMediaType.Image;
 
         Uri pageUri = ToUri(page, "APOD page", SafeHttp.IsNasaPage);
-        string? source = FindImageUrl(post) ?? FindImageUrl(content);
+        // `hdurl` is the APOD artwork. Do not recursively scan the whole API
+        // response: it also contains unrelated images in explanatory markup.
+        string? source = ReadText(post, "hdurl") ?? ReadText(post, "image_url");
+        source = FindImageUrl(source ?? string.Empty) ?? source;
+        source ??= FindImageUrl(ReadText(post, "basic_html") ?? string.Empty);
         if (mediaType == ApodMediaType.Video || source is null)
             source = await GetPreviewImageAsync(pageUri, cancellationToken).ConfigureAwait(false) ?? source;
         if (source is null)
             throw new InvalidDataException("The APOD entry does not contain a usable image or video preview.");
 
-        return new ApodItem(date, title, pageUri, ToUri(WebUtility.HtmlDecode(source), "APOD media", SafeHttp.IsHttps), mediaType, HtmlDecode(content));
+        var mediaUri = ToUri(WebUtility.HtmlDecode(source), "APOD media", SafeHttp.IsHttps);
+        return new ApodItem(apodDate, title, pageUri, PreferHighResolutionAsset(mediaUri), mediaType, HtmlDecode(content));
     }
 
     private async Task<string?> GetPreviewImageAsync(Uri page, CancellationToken cancellationToken)
@@ -94,6 +109,15 @@ public sealed class NasaApodProvider(HttpClient httpClient) : IApodProvider
     private static Uri ToUri(string value, string label, Func<Uri, bool> validator) =>
         Uri.TryCreate(value, UriKind.Absolute, out var uri) && validator(uri)
             ? uri : throw new InvalidDataException($"Invalid or unsafe {label} URL.");
+
+    // NASA's API currently adds w/h/crop parameters that limit artwork to
+    // 1500px. Request a 3840px rendition from its dynamic-image endpoint,
+    // which preserves the aspect ratio while still respecting our 30 MB limit.
+    private static Uri PreferHighResolutionAsset(Uri mediaUri) =>
+        mediaUri.Host.Equals("assets.science.nasa.gov", StringComparison.OrdinalIgnoreCase) &&
+        mediaUri.AbsolutePath.StartsWith("/dynamicimage/", StringComparison.OrdinalIgnoreCase)
+            ? new UriBuilder(mediaUri) { Query = "w=3840&fit=clip" }.Uri
+            : mediaUri;
 
     private static string HtmlDecode(string value) => WebUtility.HtmlDecode(Regex.Replace(value, "<.*?>", " "));
 }

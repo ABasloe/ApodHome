@@ -31,6 +31,20 @@ public sealed class CacheStoreTests : IDisposable
         Assert.Single(Directory.GetFiles(_directory, "*.jpg"), x => Path.GetFileName(x) != "current.jpg");
     }
 
+    [Fact]
+    public void Lock_screen_uses_a_new_immutable_copy_when_the_image_changes()
+    {
+        var store = new CacheStore(_directory);
+        File.WriteAllBytes(store.CurrentImagePath, [1, 2, 3]);
+
+        var first = store.GetOrCreateLockScreenImage(new DateOnly(2026, 11, 6));
+        File.WriteAllBytes(store.CurrentImagePath, [4, 5, 6]);
+        var second = store.GetOrCreateLockScreenImage(new DateOnly(2026, 11, 6));
+
+        Assert.NotEqual(first, second);
+        Assert.Equal([4, 5, 6], File.ReadAllBytes(second));
+    }
+
     public void Dispose()
     {
         if (Directory.Exists(_directory)) Directory.Delete(_directory, recursive: true);

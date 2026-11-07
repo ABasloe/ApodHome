@@ -16,12 +16,13 @@ internal static class Program
             {
                 case "install":
                     new TaskSchedulerManager().Install(updaterPath);
-                    // Never download or decode remote media while elevated.
-                    // The per-user task creates this image after sign-in.
-                    policy.Configure(CacheStore.ForDesktop().CurrentImagePath);
+                    // Version 1.0.0 used a machine policy that Windows Pro ignores.
+                    // Remove only the policy this app previously owned; current versions
+                    // use the Windows per-user lock-screen API without elevation.
+                    policy.Remove();
                     return Task.FromResult(0);
                 case "refresh-lock":
-                    policy.Configure(CacheStore.ForDesktop().CurrentImagePath);
+                    policy.Remove();
                     return Task.FromResult(0);
                 case "uninstall":
                     new TaskSchedulerManager().Remove();
